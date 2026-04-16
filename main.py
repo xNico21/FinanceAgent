@@ -2,6 +2,7 @@ import yfinance as yf
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 import os
+import streamlit as st
 import pandas as pd
 
 load_dotenv()
@@ -44,10 +45,19 @@ def get_stock_context(ticker):
         return {"longName": ticker}, []
 
 def generate_analysis_with_gemini(symbol, price_data, news, tech_data):
-    api_key = os.getenv("GOOGLE_API_KEY")
-    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=api_key, temperature=0.2)
+    # Fallback für Streamlit Cloud Secrets, falls os.getenv fehlschlägt
+    api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
 
-    # Der Prompt wird jetzt deutlich professioneller
+    if not api_key:
+        return "Fehler: API-Key fehlt. Hinterlege ihn in den Streamlit Secrets."
+
+    # Modell auf 'gemini-1.5-flash' korrigiert (Version 2.5 existiert nicht)
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-1.5-flash",
+        google_api_key=api_key,
+        temperature=0.2
+    )
+
     prompt = f"""
     Analysiere {symbol} als quantitativer Analyst.
 
@@ -62,9 +72,11 @@ def generate_analysis_with_gemini(symbol, price_data, news, tech_data):
     Antworte kurz und präzise auf Deutsch (max. 150 Wörter).
     """
 
-    response = llm.invoke(prompt)
-    return response.content
-
+    try:
+        response = llm.invoke(prompt)
+        return response.content
+    except Exception as e:
+        return f"KI-Analyse fehlgeschlagen: {str(e)}"
 
 # --- DIESER TEIL HAT GEFEHLT: DER STARTER ---
 if __name__ == "__main__":

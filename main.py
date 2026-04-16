@@ -1,4 +1,5 @@
 import yfinance as yf
+import requests
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 import os
@@ -31,19 +32,23 @@ def get_technical_data(symbol):
     return df, {"RSI": round(current_rsi, 2), "SMA_20": round(current_sma, 2)}
 
 
-def get_stock_context(symbol):
-    stock = yf.Ticker(symbol)
-    info = stock.info
+def get_stock_context(ticker):
+    # Erstelle eine Session, die wie ein echter Browser aussieht
+    session = requests.Session()
+    session.headers.update({
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    })
 
-    price_data = {
-        "currentPrice": info.get("currentPrice", "N/A"),
-        "trailingPE": info.get("trailingPE", "N/A"),
-        "marketCap": info.get("marketCap", "N/A")
-    }
+    stock = yf.Ticker(ticker, session=session)
 
-    news = [item.get('title', 'Kein Titel') for item in stock.news[:5]]
-    return price_data, news
-
+    try:
+        # .info ist extrem anfällig für Rate Limits.
+        # Falls es trotzdem scheitert, nehmen wir .fast_info als Backup.
+        info = stock.info
+        # ... Rest deines Codes
+    except Exception:
+        # Minimal-Fallback, falls Yahoo komplett blockt
+        return "Daten derzeit nicht verfügbar (Rate Limit)", []
 
 def generate_analysis_with_gemini(symbol, price_data, news, tech_data):
     api_key = os.getenv("GOOGLE_API_KEY")

@@ -51,9 +51,9 @@ def generate_analysis_with_gemini(symbol, price_data, news, tech_data):
     if not api_key:
         return "Fehler: API-Key fehlt. Hinterlege ihn in den Streamlit Secrets."
 
-    # Modell auf 'gemini-1.5-flash' korrigiert (Version 2.5 existiert nicht)
+    # Modell auf 'gemini-2.5-flash'
     llm = ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash",
+        model="gemini-2.5-flash",
         google_api_key=api_key,
         temperature=0.2
     )

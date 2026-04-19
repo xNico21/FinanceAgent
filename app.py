@@ -87,12 +87,21 @@ if st.button("Analyse starten"):
                 st.plotly_chart(fig, use_container_width=True)
 
             with col2:
-                st.subheader("KI-Einschätzung")
-                # Übergabe beider Pakete an Gemini
+                st.subheader("KI-Einschätzung") #ki einschätzung abgeben
                 report = generate_analysis_with_gemini(ticker, price_data, news, tech)
                 st.info(report)
 
-                # Analysten-Infos aus price_data
+                # --- NEU: News Expander direkt unter dem Bericht ---
+                with st.expander("📰 Aktuelle Schlagzeilen"):
+                    if news:
+                        for article in news[:5]:
+                            st.markdown(f"**[{article['title']}]({article['link']})**")
+                            st.caption(f"{article['publisher']} | {article['type']}")
+                            st.divider()
+                    else:
+                        st.write("Keine aktuellen News gefunden.")
+
+                # Analysten-Infos bleiben darunter
                 st.divider()
                 st.write(f"**Analysten-Zielkurs:** {price_data.get('target_price', 'N/A')} $")
                 st.write(f"**Empfehlung:** {price_data.get('recommendation', 'N/A').upper()}")
@@ -106,4 +115,4 @@ if st.button("Analyse starten"):
 
 # Sidebar
 st.sidebar.markdown("### 🛠️ Tech-Stack")
-st.sidebar.code("Infos from yfinance\nAI-Model for Recommendations: Gemini 2.5 Flash")
+st.sidebar.code("Infos from yfinance\nAI-Model Gemini 2.5 Flash")

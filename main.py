@@ -23,19 +23,19 @@ def get_technical_data(symbol):
     rs = gain / loss
     df['RSI'] = 100 - (100 / (1 + rs))
 
-    # SMAs
+    # SMAs -> close schau dir nur den Schlusskurs an -> rolling window ab dem 50/200 wert wird .mean berechnet
     df['SMA_50'] = df['Close'].rolling(window=50).mean()
     df['SMA_200'] = df['Close'].rolling(window=200).mean()
 
-    # Signale berechnen (Golden Cross)
+    # Signale berechnen -> -1 letzer Wert (zeile) in der spalte
     sma50_today = df['SMA_50'].iloc[-1]
     sma200_today = df['SMA_200'].iloc[-1]
 
-    # Werte von gestern (vorletzte Zeile)
+    # Werte von gestern, same here
     sma50_yesterday = df['SMA_50'].iloc[-2]
     sma200_yesterday = df['SMA_200'].iloc[-2]
 
-    # Logik für das echte Signal
+    # Logik für Signale
     if sma50_yesterday <= sma200_yesterday and sma50_today > sma200_today:
         signal = "Golden Cross (Frisches Kaufsignal!)"
     elif sma50_yesterday >= sma200_yesterday and sma50_today < sma200_today:

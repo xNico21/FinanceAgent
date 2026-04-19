@@ -28,14 +28,27 @@ def get_technical_data(symbol):
     df['SMA_200'] = df['Close'].rolling(window=200).mean()
 
     # Signale berechnen (Golden Cross)
-    last_sma50 = df['SMA_50'].iloc[-1]
-    last_sma200 = df['SMA_200'].iloc[-1]
-    signal = "Golden Cross (Bullisch)" if last_sma50 > last_sma200 else "Kein klares Trendsignal"
+    sma50_today = df['SMA_50'].iloc[-1]
+    sma200_today = df['SMA_200'].iloc[-1]
+
+    # Werte von gestern (vorletzte Zeile)
+    sma50_yesterday = df['SMA_50'].iloc[-2]
+    sma200_yesterday = df['SMA_200'].iloc[-2]
+
+    # Logik für das echte Signal
+    if sma50_yesterday <= sma200_yesterday and sma50_today > sma200_today:
+        signal = "Golden Cross (Frisches Kaufsignal!)"
+    elif sma50_yesterday >= sma200_yesterday and sma50_today < sma200_today:
+        signal = "Death Cross (Verkaufssignal!)"
+    elif sma50_today > sma200_today:
+        signal = "Bullischer Aufwärtstrend"
+    else:
+        signal = "Bärischer Abwärtstrend"
 
     tech_metrics = {
         "RSI": round(df['RSI'].iloc[-1], 2),
-        "SMA_50": round(last_sma50, 2),
-        "SMA_200": round(last_sma200, 2),
+        "SMA_50": round(sma50_today, 2),
+        "SMA_200": round(sma200_today, 2),
         "Trend_Signal": signal
     }
     return df, tech_metrics

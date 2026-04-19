@@ -25,19 +25,38 @@ if st.button("Analyse starten"):
         price_data, news, df, tech = fetch_all_data(ticker)
 
         if df is not None and price_data:
-            # --- ROW 1: KEY METRICS ---
+            # --- ROW 1: KEY METRICS MIT ERKLÄRUNGEN ---
             m1, m2, m3, m4 = st.columns(4)
 
-            # Aus price_data (Fundamentaler Koffer)
-            m1.metric("Kurs", f"{price_data['price']:.2f} $")
-            m3.metric("KGV (P/E)", f"{price_data.get('kgv', 'N/A')}")
+            with m1:
+                st.metric(
+                    label="Kurs",
+                    value=f"{price_data['price']:.2f} $",
+                    help="Der aktuellste an der Börse gehandelte Preis für eine Aktie."
+                )
 
-            # Aus tech (Technischer Koffer)
-            m2.metric("RSI (14)", tech['RSI'],
-                      delta="Überkauft" if tech['RSI'] > 70 else "Neutral",
-                      delta_color="inverse")
-            m4.metric("Trend-Signal", tech['Trend_Signal'])
+            with m2:
+                st.metric(
+                    label="RSI (14)",
+                    value=tech['RSI'],
+                    delta="Überkauft" if tech['RSI'] > 70 else "Neutral",
+                    delta_color="inverse",
+                    help="Der Relative Strength Index misst die Dynamik des Kurses. Die '14' steht für die letzten 14 Handelstage. Über 70 gilt die Aktie als 'heißgelaufen' (überkauft), unter 30 als günstig (überverkauft)."
+                )
 
+            with m3:
+                st.metric(
+                    label="KGV (P/E)",
+                    value=f"{price_data.get('kgv', 'N/A')}",
+                    help="Das Kurs-Gewinn-Verhältnis zeigt, das Wievielfache des Jahresgewinns man für eine Aktie bezahlt. Ein hohes KGV deutet auf hohe Wachstumserwartungen hin, kann aber auch eine Überbewertung sein."
+                )
+
+            with m4:
+                st.metric(
+                    label="Trend-Signal",
+                    value=tech['Trend_Signal'],
+                    help="Hier vergleichen wir den 50-Tage-Schnitt (Trend) mit dem 200-Tage-Schnitt (Fundament). Ein 'Golden Cross' entsteht, wenn der kurzfristige Schnitt den langfristigen nach oben kreuzt – ein starkes Kaufsignal!"
+                )
             st.divider()
 
             # --- ROW 2: CHART & KI ---
@@ -87,4 +106,4 @@ if st.button("Analyse starten"):
 
 # Sidebar
 st.sidebar.markdown("### 🛠️ Tech-Stack")
-st.sidebar.code("yfinance & Pandas\nPlotly Visuals\nGemini 1.5 Flash\nStreamlit Cloud")
+st.sidebar.code("Infos from yfinance\nAI-Model for Recommendations: Gemini 2.5 Flash")

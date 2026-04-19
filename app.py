@@ -5,7 +5,7 @@ from main import get_stock_context, generate_analysis_with_gemini, get_technical
 # Seite breit machen
 st.set_page_config(page_title="Quant-Analyst Pro", layout="wide")
 
-st.title("📈 AI-Supported Stock Analysis Pro 📈")
+st.title("📈 AI- Aktienanalyse von Nico 📈")
 st.markdown("---")
 
 

@@ -9,47 +9,60 @@ load_dotenv()
 
 
 def get_technical_data(symbol):
+    """Zuständig für alles, was aus dem Kursverlauf berechnet wird."""
     stock = yf.Ticker(symbol)
-    # Historische Daten für Indikatoren (letzte 60 Tage)
-    df = stock.history(period="60d")
+    df = stock.history(period="1y")  # 1 Jahr für SMA 200 nötig
 
     if df.empty:
         return None, None
 
-    # RSI Berechnung (vereinfacht)
+    # RSI
     delta = df['Close'].diff()
     gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
     rs = gain / loss
     df['RSI'] = 100 - (100 / (1 + rs))
 
-    # Gleitende Durchschnitte (SMA)
-    df['SMA_20'] = df['Close'].rolling(window=20).mean()
+    # SMAs
+    df['SMA_50'] = df['Close'].rolling(window=50).mean()
+    df['SMA_200'] = df['Close'].rolling(window=200).mean()
 
-    current_rsi = df['RSI'].iloc[-1]
-    current_sma = df['SMA_20'].iloc[-1]
+    # Signale berechnen (Golden Cross)
+    last_sma50 = df['SMA_50'].iloc[-1]
+    last_sma200 = df['SMA_200'].iloc[-1]
+    signal = "Golden Cross (Bullisch)" if last_sma50 > last_sma200 else "Kein klares Trendsignal"
 
-    return df, {"RSI": round(current_rsi, 2), "SMA_20": round(current_sma, 2)}
+    tech_metrics = {
+        "RSI": round(df['RSI'].iloc[-1], 2),
+        "SMA_50": round(last_sma50, 2),
+        "SMA_200": round(last_sma200, 2),
+        "Trend_Signal": signal
+    }
+    return df, tech_metrics
 
 
-def get_stock_context(ticker):
-    # Wir löschen die Session-Logik komplett und lassen yfinance machen
-    stock = yf.Ticker(ticker)
+def get_stock_context(symbol):
+    """Zuständig für Unternehmensdaten und Nachrichten."""
+    stock = yf.Ticker(symbol)
+    info = stock.info
 
-    try:
-        # Falls .info blockiert, nehmen wir .fast_info
-        info = stock.info
-        return info, stock.news
-    except Exception:
-        # Fallback, falls Yahoo gar nichts rausrückt
-        return {"longName": ticker}, []
+    fundamental_data = {
+        "name": info.get("longName", symbol),
+        "price": info.get("currentPrice"),
+        "kgv": info.get("trailingPE"),
+        "market_cap": info.get("marketCap"),
+        "target_price": info.get("targetMeanPrice"),
+        "recommendation": info.get("recommendationKey")
+    }
+    return fundamental_data, stock.news
+
 
 def generate_analysis_with_gemini(symbol, price_data, news, tech_data):
     # Fallback für Streamlit Cloud Secrets, falls os.getenv fehlschlägt
     api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
 
     if not api_key:
-        return "Fehler: API-Key fehlt. Hinterlege ihn in den Streamlit Secrets."
+        return "Fehler: Key fehlt."
 
     # Modell auf 'gemini-2.5-flash'
     llm = ChatGoogleGenerativeAI(

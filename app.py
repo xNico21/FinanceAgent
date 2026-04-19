@@ -91,12 +91,17 @@ if st.button("Analyse starten"):
                 report = generate_analysis_with_gemini(ticker, price_data, news, tech)
                 st.info(report)
 
-                # --- NEU: News Expander direkt unter dem Bericht ---
                 with st.expander("📰 Aktuelle Schlagzeilen"):
                     if news:
                         for article in news[:5]:
-                            st.markdown(f"**[{article['title']}]({article['link']})**")
-                            st.caption(f"{article['publisher']} | {article['type']}")
+                            # Sicherer Zugriff mit .get()
+                            title = article.get('title', 'Kein Titel verfügbar')
+                            link = article.get('link', '#')
+                            publisher = article.get('publisher', 'Unbekannte Quelle')
+                            news_type = article.get('type', 'News')
+
+                            st.markdown(f"**[{title}]({link})**")
+                            st.caption(f"{publisher} | {news_type}")
                             st.divider()
                     else:
                         st.write("Keine aktuellen News gefunden.")
